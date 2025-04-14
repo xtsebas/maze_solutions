@@ -37,6 +37,9 @@ class MazeGenerator:
                 self.remove_wall(i1, j1, i2, j2, direction)
                 callback(i1, j1, i2, j2)
 
+        self.grid[0][0]['W'] = False
+        self.grid[self.rows - 1][self.cols - 1]['E'] = False
+
     def generate_prim(self, callback=lambda *args: None):
         start = (random.randint(0, self.rows - 1), random.randint(0, self.cols - 1))
         frontier = []
@@ -51,6 +54,9 @@ class MazeGenerator:
                 self.visited[ni][nj] = True
                 callback(i, j, ni, nj)
                 self._add_frontier(ni, nj, frontier)
+        
+        self.grid[0][0]['W'] = False
+        self.grid[self.rows - 1][self.cols - 1]['E'] = False
 
     def _add_frontier(self, i, j, frontier):
         for (di, dj, direction, opposite) in [(-1,0,'N','S'),(1,0,'S','N'),(0,-1,'W','E'),(0,1,'E','W')]:
