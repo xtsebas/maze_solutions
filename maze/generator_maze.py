@@ -63,3 +63,58 @@ class MazeGenerator:
             ni, nj = i + di, j + dj
             if 0 <= ni < self.rows and 0 <= nj < self.cols and not self.visited[ni][nj]:
                 frontier.append((i, j, ni, nj, direction, opposite))
+    
+    def save_as_image(self):
+        os.makedirs("results", exist_ok=True)
+
+        # Buscar los archivos existentes tipo maze_###.png
+        existing = os.listdir("results")
+        nums = []
+        for name in existing:
+            match = re.match(r"maze_(\\d+)\\.png", name)
+            if match:
+                nums.append(int(match.group(1)))
+        next_num = max(nums, default=0) + 1
+        filename = f"maze_{next_num:03d}.png"
+        full_path = os.path.join("results", filename)
+
+        # Crear imagen
+        img = Image.new("RGB", (self.cols * CELL_SIZE, self.rows * CELL_SIZE), "black")
+        draw = ImageDraw.Draw(img)
+
+        for i in range(self.rows):
+            for j in range(self.cols):
+                x, y = j * CELL_SIZE, i * CELL_SIZE
+                cell = self.grid[i][j]
+                if cell['N']:
+                    draw.line([(x, y), (x + CELL_SIZE, y)], fill="white")
+                if cell['W']:
+                    draw.line([(x, y), (x, y + CELL_SIZE)], fill="white")
+                if cell['S']:
+                    draw.line([(x, y + CELL_SIZE), (x + CELL_SIZE, y + CELL_SIZE)], fill="white")
+                if cell['E']:
+                    draw.line([(x + CELL_SIZE, y), (x + CELL_SIZE, y + CELL_SIZE)], fill="white")
+
+        # Entrada (verde) y salida (rojo)
+        draw.ellipse([(5 - 4, 5 - 4), (5 + 4, 5 + 4)], fill="green")
+        ex = (self.cols - 1) * CELL_SIZE + 5
+        ey = (self.rows - 1) * CELL_SIZE + 5
+        draw.ellipse([(ex - 4, ey - 4), (ex + 4, ey + 4)], fill="red")
+
+        img.save(full_path)
+
+    def to_matrix(self):
+        matrix = [[1 for _ in range(self.cols * 2 + 1)] for _ in range(self.rows * 2 + 1)]
+        for i in range(self.rows):
+            for j in range(self.cols):
+                r, c = i * 2 + 1, j * 2 + 1
+                matrix[r][c] = 0
+                if not self.grid[i][j]['N']:
+                    matrix[r - 1][c] = 0
+                if not self.grid[i][j]['S']:
+                    matrix[r + 1][c] = 0
+                if not self.grid[i][j]['W']:
+                    matrix[r][c - 1] = 0
+                if not self.grid[i][j]['E']:
+                    matrix[r][c + 1] = 0
+        return matrix

@@ -21,6 +21,7 @@ def start_generation(canvas, method):
     canvas.create_oval(xe - 4, ye - 4, xe + 4, ye + 4, fill='red', outline='red')
     canvas.update()
 
+    maze.save_as_image()
 
 def main():
     root = tk.Tk()
