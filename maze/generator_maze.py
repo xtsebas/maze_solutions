@@ -7,9 +7,10 @@ import re
 CELL_SIZE = 10
 
 class MazeGenerator:
-    def __init__(self, rows, cols):
+    def __init__(self, rows, cols, rng=None):
         self.rows = rows
         self.cols = cols
+        self.rng = rng or random.Random()
         self.grid = [[{'N': True, 'S': True, 'E': True, 'W': True} for _ in range(cols)] for _ in range(rows)]
         self.visited = [[False]*cols for _ in range(rows)]
 
@@ -27,7 +28,7 @@ class MazeGenerator:
             for j in range(self.cols):
                 if i > 0: walls.append(((i, j), (i - 1, j), 'N'))
                 if j > 0: walls.append(((i, j), (i, j - 1), 'W'))
-        random.shuffle(walls)
+        self.rng.shuffle(walls)
 
         ds = DisjointSet(self.rows * self.cols)
         for (i1, j1), (i2, j2), direction in walls:
@@ -41,13 +42,13 @@ class MazeGenerator:
         self.grid[self.rows - 1][self.cols - 1]['E'] = False
 
     def generate_prim(self, callback=lambda *args: None):
-        start = (random.randint(0, self.rows - 1), random.randint(0, self.cols - 1))
+        start = (self.rng.randint(0, self.rows - 1), self.rng.randint(0, self.cols - 1))
         frontier = []
         self.visited[start[0]][start[1]] = True
         self._add_frontier(*start, frontier)
 
         while frontier:
-            i, j, ni, nj, direction, opposite = frontier.pop(random.randint(0, len(frontier)-1))
+            i, j, ni, nj, direction, opposite = frontier.pop(self.rng.randint(0, len(frontier)-1))
             if not self.visited[ni][nj]:
                 self.grid[i][j][direction] = False
                 self.grid[ni][nj][opposite] = False
@@ -64,18 +65,19 @@ class MazeGenerator:
             if 0 <= ni < self.rows and 0 <= nj < self.cols and not self.visited[ni][nj]:
                 frontier.append((i, j, ni, nj, direction, opposite))
     
-    def save_as_image(self):
+    def save_as_image(self, method_name="kruskal"):
         os.makedirs("results", exist_ok=True)
 
-        # Buscar los archivos existentes tipo maze_###.png
+        # Buscar archivos existentes del tipo maze_method_###.png
         existing = os.listdir("results")
         nums = []
+        pattern = rf"maze_{method_name}_(\d+)\.png"
         for name in existing:
-            match = re.match(r"maze_(\\d+)\\.png", name)
+            match = re.match(pattern, name)
             if match:
                 nums.append(int(match.group(1)))
         next_num = max(nums, default=0) + 1
-        filename = f"maze_{next_num:03d}.png"
+        filename = f"maze_{method_name}_{next_num:03d}.png"
         full_path = os.path.join("results", filename)
 
         # Crear imagen
@@ -102,6 +104,7 @@ class MazeGenerator:
         draw.ellipse([(ex - 4, ey - 4), (ex + 4, ey + 4)], fill="red")
 
         img.save(full_path)
+
 
     def to_matrix(self):
         matrix = [[1 for _ in range(self.cols * 2 + 1)] for _ in range(self.rows * 2 + 1)]
