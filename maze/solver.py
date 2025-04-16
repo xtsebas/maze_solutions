@@ -46,3 +46,25 @@ def is_valid(maze, position):
         return False
     
     return True
+
+def solve_maze(maze, algo):
+
+    start = (1, 1)
+    goal = (len(maze)-2, len(maze[0])-2) #el laberinto tiene bordes, asi que hubo que hacer un ajuste.
+
+    if algo.lower() == "bfs":
+        print("\nResolviendo laberinto con BFS...")
+        path = bfs(maze, start, goal)
+        if path:
+            print("Camino encontrado:")
+            print(path)
+        else:
+            print("No se encontró camino desde {} hasta {}.".format(start, goal))
+    else:
+        print("Algoritmo '{}' no implementado. Usando BFS por defecto.".format(algo))
+        path = bfs(maze, start, goal)
+        if path:
+            print("Camino encontrado:")
+            print(path)
+        else:
+            print("No se encontró camino desde {} hasta {}.".format(start, goal))
