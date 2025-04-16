@@ -1,5 +1,5 @@
 from collections import deque
-
+import heapq
 def bfs (maze, start, goal):
     
     queue = deque([start])
@@ -70,6 +70,47 @@ def dfs (maze, start, goal):
     path.reverse()
     return path
 
+def ucs (maze, start, goal):
+    costs = {start:0} #para cada celda guardamos el menor coste con el que llegamos hasta a ella
+    parent = {}
+
+    frontier = [] #cola de prioridad
+    heapq.heappush(frontier, (0, start[0] + start[1], start)) #metemos una tupla a la heap
+
+    visited = set()
+
+    while frontier:
+        current_cost, _, current = heapq.heappop(frontier)
+
+        if current == goal:
+            path = []
+            node = goal
+            while node != start:
+                path.append(node)
+                node = parent[node]
+            path.append(start)
+            path.reverse()
+            return path
+        
+        if current in visited:
+            continue
+        visited.add(current)
+
+        x, y = current
+
+        for dx, dy in [(-1,0),(1,0), (0,-1),(0,1)]:
+            neighbor = (x + dx, y + dy) #calcilar vecinos
+            if not is_valid(maze, neighbor):
+                continue
+            new_cost = current_cost + 1 #calcular el nuevo coste hasta el vecino. Cada paso vale 1
+
+            if neighbor not in costs or new_cost < costs[neighbor]:
+                costs[neighbor] = new_cost
+                parent[neighbor] = current
+                tie = neighbor[0] + neighbor[1] #si dos nodos tienen el mismo costo priorizamos el que está más arriba a la izquierda
+                heapq.heappush(frontier, (new_cost, tie, neighbor))
+    
+    return None
 
 
 def is_valid(maze, position):
@@ -90,31 +131,28 @@ def is_valid(maze, position):
 
 def solve_maze(maze, algo):
     """
-    Resuelve el laberinto usando el algoritmo seleccionado.
-
-    Parámetros:
-      maze: matriz del laberinto (lista de listas) con 0 (camino) y 1 (muro).
-      algo: string que indica el algoritmo a usar ("bfs" o "dfs").
+    Resuelve el laberinto usando el algoritmo seleccionado: bfs, dfs o ucs.
     """
-    # Ajusta la entrada y salida según el borde de muros
+    # Ajustamos puntos de entrada y salida (bordes exteriores son muros)
     start = (1, 1)
-    goal  = (len(maze) - 2, len(maze[0]) - 2)
-
+    goal = (len(maze)-2, len(maze[0])-2)
     algo = algo.lower()
-    if algo == "bfs":
-        print("\nResolviendo laberinto con BFS...")
+
+    if algo == 'bfs':
+        print("\nEjecutando BFS...")
         path = bfs(maze, start, goal)
-    elif algo == "dfs":
-        print("\nResolviendo laberinto con DFS...")
+    elif algo == 'dfs':
+        print("\nEjecutando DFS...")
         path = dfs(maze, start, goal)
+    elif algo in ('ucs', 'cost', 'dijkstra'):
+        print("\nEjecutando Uniform Cost Search (Dijkstra)...")
+        path = ucs(maze, start, goal)
     else:
         print(f"\nAlgoritmo '{algo}' no implementado. Usando BFS por defecto.")
         path = bfs(maze, start, goal)
 
-    # Mostrar resultado
     if path:
         print("Camino encontrado:")
         print(path)
     else:
         print(f"No se encontró camino desde {start} hasta {goal}.")
-
