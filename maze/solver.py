@@ -31,6 +31,40 @@ def bfs (maze, start, goal):
 
     return None
 
+def dfs (maze, start, goal):
+    visited = set()
+    parent = {}
+
+    def _dfs(current):
+        if current == goal:
+            return True
+    
+        x, y = current
+
+        for dx, dy in [(-1,0), (1,0), (0,-1), (0,1)]:
+            neighbor = (x + dx, y + dy)
+            if is_valid(maze, neighbor) and neighbor not in visited:
+                visited.add(neighbor)
+                parent[neighbor] = current
+                if _dfs(neighbor):
+                    return True
+        return False
+    
+    visited.add(start)
+    if not _dfs(start):
+        return None
+    
+    path = []
+    cur = goal 
+    while cur != start:
+        path.append(cur)
+        cur = parent[cur]
+    path.append(start)
+    path.reverse()
+    return path
+
+
+
 def is_valid(maze, position):
     rows = len(maze)
     if rows == 0:
@@ -68,3 +102,4 @@ def solve_maze(maze, algo):
             print(path)
         else:
             print("No se encontró camino desde {} hasta {}.".format(start, goal))
+
