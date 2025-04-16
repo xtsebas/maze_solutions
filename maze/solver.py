@@ -35,22 +35,29 @@ def dfs (maze, start, goal):
     visited = set()
     parent = {}
 
+    #recursividad, usamos la celda actual.
     def _dfs(current):
+        #caso base
         if current == goal:
             return True
     
         x, y = current
 
+        #aca recorremos los vecinos
         for dx, dy in [(-1,0), (1,0), (0,-1), (0,1)]:
             neighbor = (x + dx, y + dy)
             if is_valid(maze, neighbor) and neighbor not in visited:
                 visited.add(neighbor)
+                #registramos de donde venimos
                 parent[neighbor] = current
+                #aplicamos recursividad
                 if _dfs(neighbor):
                     return True
+        #si ningun vecino encontro la salida volvemos a la posicion anterior e iniciamos de nuevo
         return False
     
     visited.add(start)
+    #llamamos a la recursion
     if not _dfs(start):
         return None
     
@@ -82,24 +89,32 @@ def is_valid(maze, position):
     return True
 
 def solve_maze(maze, algo):
+    """
+    Resuelve el laberinto usando el algoritmo seleccionado.
 
+    Parámetros:
+      maze: matriz del laberinto (lista de listas) con 0 (camino) y 1 (muro).
+      algo: string que indica el algoritmo a usar ("bfs" o "dfs").
+    """
+    # Ajusta la entrada y salida según el borde de muros
     start = (1, 1)
-    goal = (len(maze)-2, len(maze[0])-2) #el laberinto tiene bordes, asi que hubo que hacer un ajuste.
+    goal  = (len(maze) - 2, len(maze[0]) - 2)
 
-    if algo.lower() == "bfs":
+    algo = algo.lower()
+    if algo == "bfs":
         print("\nResolviendo laberinto con BFS...")
         path = bfs(maze, start, goal)
-        if path:
-            print("Camino encontrado:")
-            print(path)
-        else:
-            print("No se encontró camino desde {} hasta {}.".format(start, goal))
+    elif algo == "dfs":
+        print("\nResolviendo laberinto con DFS...")
+        path = dfs(maze, start, goal)
     else:
-        print("Algoritmo '{}' no implementado. Usando BFS por defecto.".format(algo))
+        print(f"\nAlgoritmo '{algo}' no implementado. Usando BFS por defecto.")
         path = bfs(maze, start, goal)
-        if path:
-            print("Camino encontrado:")
-            print(path)
-        else:
-            print("No se encontró camino desde {} hasta {}.".format(start, goal))
+
+    # Mostrar resultado
+    if path:
+        print("Camino encontrado:")
+        print(path)
+    else:
+        print(f"No se encontró camino desde {start} hasta {goal}.")
 

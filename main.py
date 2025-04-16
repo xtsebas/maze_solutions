@@ -100,7 +100,7 @@ def main():
             # Selección del algoritmo a usar para la resolución
             print("\nSeleccione el algoritmo de resolución:")
             print("1. BFS")
-            print("2. DFS (no implementado aun)")
+            print("2. DFS")
             print("3. Cost Uniform Search (no implementado aun)")
             print("4. A* (no implementado aun)")
             algo_choice = input("Ingrese el número del algoritmo a usar: ").strip()
