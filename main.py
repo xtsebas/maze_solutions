@@ -102,7 +102,7 @@ def main():
             print("1. BFS")
             print("2. DFS")
             print("3. Cost Uniform Search")
-            print("4. A* (no implementado aun)")
+            print("4. A*")
             algo_choice = input("Ingrese el número del algoritmo a usar: ").strip()
 
             if algo_choice == "1":

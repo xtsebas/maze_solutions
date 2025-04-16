@@ -112,6 +112,63 @@ def ucs (maze, start, goal):
     
     return None
 
+def a_star(maze, start, goal):
+
+    open_set = [] #heap para los nodos pendientes de explorar.
+    g_score = {start: 0} #coste real mínimo conocido desde start hasta cada nodo
+    f_score = {start: heuristic(start, goal)} #estimación total del coste (g + h) para cada nodo
+    parent = {}
+    closed = set()
+
+    #insertamos el nodo incial en la heap con la f_score y tie_breaker
+    heapq.heappush(open_set, (f_score[start], start[0]*start[1], start))
+
+    while open_set:
+        current_f, _, current = heapq.heappop(open_set)
+
+        if current == goal:
+            path = []
+            node = goal
+            while node != start:
+                path.append(node)
+                node = parent[node]
+            path.append(start)
+            path.reverse()
+            return path
+        
+        #Evitamos re‑procesar nodos que ya expandimos antes.
+        if current in closed:
+            continue
+        closed.add(current)
+
+        x, y = current
+
+        for dx, dy in [(-1,0),(1,0),(0,-1),(0,1)]:
+            neigh = (x+dx, y+dy)
+            if not is_valid(maze, neigh):
+                continue
+
+            # Coste provisional para llegar al vecino: coste al actual + 1 por el paso
+            tentative_g = g_score[current] + 1 
+
+            if neigh not in g_score or tentative_g < g_score[neigh]:
+                parent[neigh] = current
+                g_score[neigh] = tentative_g
+                f = tentative_g + heuristic(neigh, goal)
+                f_score[neigh] = f
+                tie = neigh[0] * neigh[1] #para el desempate
+
+                if neigh not in closed:
+                    heapq.heappush(open_set, (f, tie, neigh))
+    
+    return None
+
+
+
+def heuristic(a, b):
+    #usamos la distancia Manhattan 
+    # Distancia = |fila_a - fila_b| + |columna_a - columna_b|
+    return abs(a[0] - b[0]) + abs(a[1] - b[1])
 
 def is_valid(maze, position):
     rows = len(maze)
@@ -133,7 +190,6 @@ def solve_maze(maze, algo):
     """
     Resuelve el laberinto usando el algoritmo seleccionado: bfs, dfs o ucs.
     """
-    # Ajustamos puntos de entrada y salida (bordes exteriores son muros)
     start = (1, 1)
     goal = (len(maze)-2, len(maze[0])-2)
     algo = algo.lower()
@@ -147,6 +203,9 @@ def solve_maze(maze, algo):
     elif algo in ('ucs', 'cost', 'dijkstra'):
         print("\nEjecutando Uniform Cost Search (Dijkstra)...")
         path = ucs(maze, start, goal)
+    elif algo in ('a_star', 'a*'):
+        print("\nEjecutando A*...")
+        path = a_star(maze, start, goal)
     else:
         print(f"\nAlgoritmo '{algo}' no implementado. Usando BFS por defecto.")
         path = bfs(maze, start, goal)
