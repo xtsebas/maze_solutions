@@ -127,7 +127,7 @@ def main():
                 size = (45,55),
                 method='kruskal'
                 )
-            compare_search_algorithms(mazes=mazes, visualize=False)
+            compare_search_algorithms(mazes=mazes, visualize=True)
             
         elif choice == "0":
             print("Saliendo del programa. ¡Hasta luego!")

@@ -1,12 +1,17 @@
 from collections import deque
 import heapq
-def bfs(maze, start, goal, return_visited=False):
+def bfs(maze, start, goal, return_visited=False, step_callback=None):
+    from collections import deque
     queue = deque([start])
     visited = set([start])
     parent = {}
 
     while queue:
         current = queue.popleft()
+
+        if step_callback:
+            step_callback(current)
+
         if current == goal:
             path = []
             while current != start:
@@ -17,7 +22,7 @@ def bfs(maze, start, goal, return_visited=False):
             return (path, visited) if return_visited else path
 
         x, y = current
-        for dx, dy in [(-1,0), (1,0), (0,-1), (0,1)]:
+        for dx, dy in [(-1, 0), (1, 0), (0, -1), (0, 1)]:
             neighbor = (x + dx, y + dy)
             if is_valid(maze, neighbor) and neighbor not in visited:
                 visited.add(neighbor)
@@ -26,16 +31,20 @@ def bfs(maze, start, goal, return_visited=False):
 
     return (None, visited) if return_visited else None
 
-def dfs(maze, start, goal, return_visited=False):
+
+def dfs(maze, start, goal, return_visited=False, step_callback=None):
     visited = set()
     parent = {}
 
     def _dfs(current):
+        if step_callback:
+            step_callback(current)
+
         if current == goal:
             return True
 
         x, y = current
-        for dx, dy in [(-1,0), (1,0), (0,-1), (0,1)]:
+        for dx, dy in [(-1, 0), (1, 0), (0, -1), (0, 1)]:
             neighbor = (x + dx, y + dy)
             if is_valid(maze, neighbor) and neighbor not in visited:
                 visited.add(neighbor)
@@ -49,7 +58,7 @@ def dfs(maze, start, goal, return_visited=False):
         return (None, visited) if return_visited else None
 
     path = []
-    cur = goal 
+    cur = goal
     while cur != start:
         path.append(cur)
         cur = parent[cur]
@@ -57,7 +66,10 @@ def dfs(maze, start, goal, return_visited=False):
     path.reverse()
     return (path, visited) if return_visited else path
 
-def ucs(maze, start, goal, return_visited=False):
+
+import heapq
+
+def ucs(maze, start, goal, return_visited=False, step_callback=None):
     costs = {start: 0}
     parent = {}
     frontier = []
@@ -66,6 +78,13 @@ def ucs(maze, start, goal, return_visited=False):
 
     while frontier:
         current_cost, _, current = heapq.heappop(frontier)
+
+        if current in visited:
+            continue
+        visited.add(current)
+
+        if step_callback:
+            step_callback(current)
 
         if current == goal:
             path = []
@@ -77,17 +96,12 @@ def ucs(maze, start, goal, return_visited=False):
             path.reverse()
             return (path, visited) if return_visited else path
 
-        if current in visited:
-            continue
-        visited.add(current)
-
         x, y = current
-        for dx, dy in [(-1,0),(1,0), (0,-1),(0,1)]:
+        for dx, dy in [(-1, 0), (1, 0), (0, -1), (0, 1)]:
             neighbor = (x + dx, y + dy)
             if not is_valid(maze, neighbor):
                 continue
             new_cost = current_cost + 1
-
             if neighbor not in costs or new_cost < costs[neighbor]:
                 costs[neighbor] = new_cost
                 parent[neighbor] = current
@@ -96,7 +110,7 @@ def ucs(maze, start, goal, return_visited=False):
 
     return (None, visited) if return_visited else None
 
-def a_star(maze, start, goal, return_visited=False):
+def a_star(maze, start, goal, return_visited=False, step_callback=None):
     open_set = []
     g_score = {start: 0}
     f_score = {start: heuristic(start, goal)}
@@ -108,6 +122,13 @@ def a_star(maze, start, goal, return_visited=False):
     while open_set:
         current_f, _, current = heapq.heappop(open_set)
 
+        if current in closed:
+            continue
+        closed.add(current)
+
+        if step_callback:
+            step_callback(current)
+
         if current == goal:
             path = []
             node = goal
@@ -118,13 +139,9 @@ def a_star(maze, start, goal, return_visited=False):
             path.reverse()
             return (path, closed) if return_visited else path
 
-        if current in closed:
-            continue
-        closed.add(current)
-
         x, y = current
-        for dx, dy in [(-1,0),(1,0),(0,-1),(0,1)]:
-            neigh = (x+dx, y+dy)
+        for dx, dy in [(-1, 0), (1, 0), (0, -1), (0, 1)]:
+            neigh = (x + dx, y + dy)
             if not is_valid(maze, neigh):
                 continue
 
@@ -139,6 +156,7 @@ def a_star(maze, start, goal, return_visited=False):
                     heapq.heappush(open_set, (f, tie, neigh))
 
     return (None, closed) if return_visited else None
+
 
 
 
@@ -196,33 +214,38 @@ def solve_maze(maze, algo):
 import time
 from collections import defaultdict
 
-def solve_simulation(maze: list, algorithm: str, start: tuple, goal: tuple):
+def solve_simulation(maze: list, algorithm: str, start: tuple, goal: tuple, step_callback=None):
     result = {
         "algorithm": algorithm,
         "nodes_explored": 0,
         "path_length": 0,
         "time_taken": 0,
-        "found_path": False
+        "found_path": False,
+        "path": [],
+        "visited": set()
     }
 
     start_time = time.time()
-    
+
     if algorithm == 'bfs':
-        path, visited = bfs(maze, start, goal, return_visited=True)
+        path, visited = bfs(maze, start, goal, return_visited=True, step_callback=step_callback)
     elif algorithm == 'dfs':
-        path, visited = dfs(maze, start, goal, return_visited=True)
+        path, visited = dfs(maze, start, goal, return_visited=True, step_callback=step_callback)
     elif algorithm in ('ucs', 'cost', 'dijkstra'):
-        path, visited = ucs(maze, start, goal, return_visited=True)
+        path, visited = ucs(maze, start, goal, return_visited=True, step_callback=step_callback)
     elif algorithm in ('a_star', 'a*'):
-        path, visited = a_star(maze, start, goal, return_visited=True)
+        path, visited = a_star(maze, start, goal, return_visited=True, step_callback=step_callback)
     else:
         raise ValueError(f"Algoritmo '{algorithm}' no implementado.")
-    
+
     end_time = time.time()
 
     result["time_taken"] = end_time - start_time
     result["nodes_explored"] = len(visited)
     result["found_path"] = path is not None
     result["path_length"] = len(path) if path else 0
+    result["path"] = path if path else []
+    result["visited"] = visited
 
     return result
+
