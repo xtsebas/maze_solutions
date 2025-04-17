@@ -6,6 +6,7 @@ from maze.visualizer import draw_wall
 from experiments.comparation import generate_k_mazes
 # Se importa la función solve_maze desde solver.py (donde implementaste BFS, etc.)
 from maze.solver import solve_maze
+from experiments.comparation import compare_search_algorithms
 
 # Variables globales para almacenar las matrices generadas
 matrix_kruskal = None
@@ -126,6 +127,7 @@ def main():
                 size = (45,55),
                 method='kruskal'
                 )
+            compare_search_algorithms(mazes=mazes, visualize=False)
             
         elif choice == "0":
             print("Saliendo del programa. ¡Hasta luego!")
