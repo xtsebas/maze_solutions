@@ -5,8 +5,9 @@ import sys
 import tkinter as tk
 import threading
 import time
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+import csv
 
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 from maze.generator_maze import MazeGenerator
 from maze.solver import solve_simulation
 
@@ -86,7 +87,6 @@ def visualize_simulation(mazes: dict):
         sorted_algos = sorted(results.items(), key=lambda x: x[1]['time_taken'])
         for rank, (algo, res) in enumerate(sorted_algos, start=1):
             res['rank'] = rank
-
         headers = ['Algoritmo', 'Tiempo (s)', 'Distancia', 'Nodos', 'Ranking']
         col_widths = [150, 120, 100, 100, 100]
         y = 10
@@ -113,6 +113,49 @@ def visualize_simulation(mazes: dict):
                 table_canvas.create_text(x, y, anchor='nw', text=val, font=('Courier', 10))
                 x += col_widths[i]
             y += 20
+        # Guardar en CSV
+        csv_file = 'results/maze_results.csv'
+        file_exists = os.path.isfile(csv_file)
+        with open(csv_file, 'a', newline='') as f:
+            writer = csv.writer(f)
+            if not file_exists:
+                writer.writerow(['Maze', 'Algoritmo', 'Tiempo', 'Distancia', 'Nodos', 'Ranking'])
+
+            for algo, res in results.items():
+                writer.writerow([
+                    maze_keys[current_maze_index[0] - 1],  # maze key anterior
+                    algo,
+                    f"{res['time_taken']:.3f}",
+                    res['path_length'],
+                    res['nodes_explored'],
+                    res['rank']
+                ])
+
+    # Dibujo en canvas (igual que antes)
+    headers = ['Algoritmo', 'Tiempo (s)', 'Distancia', 'Nodos', 'Ranking']
+    col_widths = [150, 120, 100, 100, 100]
+    y = 10
+    x = 10
+    for i, h in enumerate(headers):
+        table_canvas.create_text(x, y, anchor='nw', text=h, font=('Courier', 10, 'bold'))
+        x += col_widths[i]
+    y += 25
+
+    sorted_by_rank = sorted(results.items(), key=lambda x: x[1]['rank'])
+    for algo, res in sorted_by_rank:
+        values = [
+            algo.upper(),
+            f"{res['time_taken']:.3f}",
+            f"{res['path_length']}",
+            f"{res['nodes_explored']}",
+            f"#{res['rank']}"
+        ]
+        x = 10
+        for i, val in enumerate(values):
+            table_canvas.create_text(x, y, anchor='nw', text=val, font=('Courier', 10))
+            x += col_widths[i]
+        y += 20
+
 
 
     def run_solver(algo, maze, start, goal):
@@ -123,14 +166,14 @@ def visualize_simulation(mazes: dict):
 
         def step_callback(pos):
             draw_point_safe(canvas, pos, 'blue', scale)
-            time.sleep(0.002)
+            time.sleep(0.001)
 
         res = solve_simulation(maze, algo, start, goal, step_callback=step_callback)
         results[algo] = res
 
         for pos in res['path']:
             draw_point_safe(canvas, pos, 'orange', scale)
-            time.sleep(0.002)
+            time.sleep(0.001)
 
         running_threads[algo] = True
         if len(running_threads) == 4:
@@ -150,7 +193,7 @@ def visualize_simulation(mazes: dict):
 
     def next_maze():
         if current_maze_index[0] >= len(maze_keys):
-            title_var.set("Simulación completa 🚀")
+            title_var.set("Simulación completa")
             return
 
         maze_key = maze_keys[current_maze_index[0]]
