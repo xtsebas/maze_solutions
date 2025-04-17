@@ -3,6 +3,7 @@ import threading
 import random
 from maze.generator_maze import MazeGenerator
 from maze.visualizer import draw_wall
+from experiments.comparation import generate_k_mazes
 # Se importa la función solve_maze desde solver.py (donde implementaste BFS, etc.)
 from maze.solver import solve_maze
 
@@ -117,8 +118,15 @@ def main():
             print("\nResolviendo laberinto con el algoritmo {}...".format(algo))
             # La función solve_maze se encargará de aplicar el algoritmo seleccionado y mostrar el resultado.
             solve_maze(maze_matrix, algo)
+            
         elif choice == "3":
             print("Tabla de soluciones: (Funcionalidad pendiente)")
+            mazes = generate_k_mazes(
+                k = 25,
+                size = (45,55),
+                method='kruskal'
+                )
+            
         elif choice == "0":
             print("Saliendo del programa. ¡Hasta luego!")
             break
