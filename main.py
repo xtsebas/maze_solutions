@@ -99,7 +99,8 @@ def main():
                 print("Opción no válida. Volviendo al menú principal.")
                 continue
 
-            # Selección del algoritmo a usar para la resolución
+            # Selección del algoritmo a usar par3
+            # a la resolución
             print("\nSeleccione el algoritmo de resolución:")
             print("1. BFS")
             print("2. DFS")

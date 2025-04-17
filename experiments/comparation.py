@@ -51,6 +51,7 @@ def visualize_simulation(mazes: dict):
     canvases = {}
     scale = None
     running_threads = {}
+    results = {}
 
     root = tk.Tk()
     title_var = tk.StringVar()
@@ -64,6 +65,10 @@ def visualize_simulation(mazes: dict):
         canvas.grid(row=row*2+2, column=col, padx=10, pady=5)
         canvases[algo] = canvas
 
+    # Canvas para la tabla
+    table_canvas = tk.Canvas(root, width=canvas_size * 2, height=120, bg='lightgray')
+    table_canvas.grid(row=6, column=0, columnspan=2, pady=10)
+
     def draw_maze(canvas, maze, scale):
         for i, row in enumerate(maze):
             for j, cell in enumerate(row):
@@ -76,6 +81,40 @@ def visualize_simulation(mazes: dict):
             canvas.create_rectangle(j*scale, i*scale, (j+1)*scale, (i+1)*scale, fill=color, outline='')
         root.after(0, callback)
 
+    def draw_table():
+        table_canvas.delete("all")
+        sorted_algos = sorted(results.items(), key=lambda x: x[1]['time_taken'])
+        for rank, (algo, res) in enumerate(sorted_algos, start=1):
+            res['rank'] = rank
+
+        headers = ['Algoritmo', 'Tiempo (s)', 'Distancia', 'Nodos', 'Ranking']
+        col_widths = [150, 120, 100, 100, 100]
+        y = 10
+
+        # Encabezado
+        x = 10
+        for i, h in enumerate(headers):
+            table_canvas.create_text(x, y, anchor='nw', text=h, font=('Courier', 10, 'bold'))
+            x += col_widths[i]
+        y += 25
+
+        # Filas ordenadas por ranking
+        sorted_by_rank = sorted(results.items(), key=lambda x: x[1]['rank'])
+        for algo, res in sorted_by_rank:
+            values = [
+                algo.upper(),
+                f"{res['time_taken']:.3f}",
+                f"{res['path_length']}",
+                f"{res['nodes_explored']}",
+                f"#{res['rank']}"
+            ]
+            x = 10
+            for i, val in enumerate(values):
+                table_canvas.create_text(x, y, anchor='nw', text=val, font=('Courier', 10))
+                x += col_widths[i]
+            y += 20
+
+
     def run_solver(algo, maze, start, goal):
         canvas = canvases[algo]
         draw_maze(canvas, maze, scale)
@@ -87,6 +126,7 @@ def visualize_simulation(mazes: dict):
             time.sleep(0.002)
 
         res = solve_simulation(maze, algo, start, goal, step_callback=step_callback)
+        results[algo] = res
 
         for pos in res['path']:
             draw_point_safe(canvas, pos, 'orange', scale)
@@ -94,12 +134,15 @@ def visualize_simulation(mazes: dict):
 
         running_threads[algo] = True
         if len(running_threads) == 4:
-            root.after(1500, next_maze)
+            draw_table()
+            root.after(2000, next_maze)
 
     def start_algorithms(maze_key, maze, start, goal):
         running_threads.clear()
+        results.clear()
         for canvas in canvases.values():
             canvas.delete("all")
+        table_canvas.delete("all")
 
         for algo in algorithms:
             t = threading.Thread(target=run_solver, args=(algo, maze, start, goal))
