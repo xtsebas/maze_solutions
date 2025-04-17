@@ -27,7 +27,7 @@ def generate_k_mazes(k: int, size: tuple, method: str = 'kruskal'):
             key = f'prim_{i}'
 
         mazes[key] = maze.to_matrix()
-        maze.save_as_image(method_name=key)
+        # maze.save_as_image(method_name=key)
 
     return mazes
 

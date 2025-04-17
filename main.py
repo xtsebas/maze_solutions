@@ -25,11 +25,11 @@ def start_generation(canvas, method):
     if method == 'kruskal':
         maze.generate_kruskal(step)
         matrix_kruskal = maze.to_matrix()
-        maze.save_as_image(method_name='kruskal')
+        # maze.save_as_image(method_name='kruskal')
     else:
         maze.generate_prim(step)
         matrix_prim = maze.to_matrix()
-        maze.save_as_image(method_name='prim')
+        # maze.save_as_image(method_name='prim')
 
     # Dibujar entrada (verde) y salida (rojo)
     # En este ejemplo, la entrada es la celda (0,0) y la salida la celda inferior derecha.
@@ -125,7 +125,7 @@ def main():
         elif choice == "3":
             print("Tabla de soluciones: (Funcionalidad pendiente)")
             mazes = generate_k_mazes(
-                k = 2,
+                k = 25,
                 size = (45,55),
                 method='kruskal'
                 )
