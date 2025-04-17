@@ -39,68 +39,89 @@ def compare_search_algorithms(mazes : dict, visualize = True):
 """
 simulation core for search algorithms
 """
+import tkinter as tk
+import threading
+import time
+
 def visualize_simulation(mazes: dict):
     algorithms = ['bfs', 'dfs', 'ucs', 'a_star']
-
-    maze_key, maze = list(mazes.items())[0]
-    start, goal = generate_start_goal(maze)
+    maze_keys = list(mazes.keys())
+    current_maze_index = [0]
+    canvas_size = 300
+    canvases = {}
+    scale = None
+    running_threads = {}
 
     root = tk.Tk()
-    root.title(f"Visualización Comparativa - {maze_key}")
-    canvas_size = 300
-    scale = canvas_size // len(maze)
-    canvases = {}
+    title_var = tk.StringVar()
+    title_var.set("Visualización Comparativa")
+    tk.Label(root, textvariable=title_var, font=('Arial', 14, 'bold')).grid(row=0, column=0, columnspan=2, pady=(10, 10))
 
-    # Crear layout 2x2 con etiquetas arriba
     for idx, algo in enumerate(algorithms):
         row, col = divmod(idx, 2)
-
-        # Etiqueta con el nombre del algoritmo
-        label = tk.Label(root, text=algo.upper(), font=('Arial', 12, 'bold'))
-        label.grid(row=row*2, column=col, pady=(10, 0))
-
-        # Canvas debajo de la etiqueta
-        canvas = tk.Canvas(root, width=canvas_size, height=canvas_size + 40, bg='white')
-        canvas.grid(row=row*2 + 1, column=col, padx=10, pady=5)
+        tk.Label(root, text=algo.upper(), font=('Arial', 12, 'bold')).grid(row=row*2+1, column=col)
+        canvas = tk.Canvas(root, width=canvas_size, height=canvas_size, bg='white')
+        canvas.grid(row=row*2+2, column=col, padx=10, pady=5)
         canvases[algo] = canvas
 
-    def draw_maze(canvas, maze):
+    def draw_maze(canvas, maze, scale):
         for i, row in enumerate(maze):
             for j, cell in enumerate(row):
                 color = 'black' if cell == 1 else 'white'
                 canvas.create_rectangle(j*scale, i*scale, (j+1)*scale, (i+1)*scale, fill=color, outline='')
 
-    def draw_point(canvas, pos, color):
+    def draw_point_safe(canvas, pos, color, scale):
         i, j = pos
-        canvas.create_rectangle(j*scale, i*scale, (j+1)*scale, (i+1)*scale, fill=color, outline='')
+        def callback():
+            canvas.create_rectangle(j*scale, i*scale, (j+1)*scale, (i+1)*scale, fill=color, outline='')
+        root.after(0, callback)
 
-    def run_solver(algorithm):
-        canvas = canvases[algorithm]
-        draw_maze(canvas, maze)
-        draw_point(canvas, start, 'green')
-        draw_point(canvas, goal, 'red')
+    def run_solver(algo, maze, start, goal):
+        canvas = canvases[algo]
+        draw_maze(canvas, maze, scale)
+        draw_point_safe(canvas, start, 'green', scale)
+        draw_point_safe(canvas, goal, 'red', scale)
 
         def step_callback(pos):
-            draw_point(canvas, pos, 'blue')
-            canvas.update()
+            draw_point_safe(canvas, pos, 'blue', scale)
             time.sleep(0.002)
 
-        result = solve_simulation(maze, algorithm, start, goal, step_callback=step_callback)
+        res = solve_simulation(maze, algo, start, goal, step_callback=step_callback)
 
-        for pos in result['path']:
-            draw_point(canvas, pos, 'orange')
-            canvas.update()
+        for pos in res['path']:
+            draw_point_safe(canvas, pos, 'orange', scale)
             time.sleep(0.002)
 
-        canvas.create_text(5, canvas_size + 5, anchor='nw',
-                           text=f"Tiempo: {result['time_taken']:.3f}s", fill='black', font=('Arial', 9))
-        canvas.create_text(5, canvas_size + 20, anchor='nw',
-                           text=f"Ruta: {result['path_length']} pasos", fill='black', font=('Arial', 9))
+        running_threads[algo] = True
+        if len(running_threads) == 4:
+            root.after(1500, next_maze)
 
-    for algo in algorithms:
-        threading.Thread(target=run_solver, args=(algo,)).start()
+    def start_algorithms(maze_key, maze, start, goal):
+        running_threads.clear()
+        for canvas in canvases.values():
+            canvas.delete("all")
 
+        for algo in algorithms:
+            t = threading.Thread(target=run_solver, args=(algo, maze, start, goal))
+            t.start()
+
+    def next_maze():
+        if current_maze_index[0] >= len(maze_keys):
+            title_var.set("Simulación completa 🚀")
+            return
+
+        maze_key = maze_keys[current_maze_index[0]]
+        maze = mazes[maze_key]
+        current_maze_index[0] += 1
+        nonlocal scale
+        scale = canvas_size // len(maze)
+        start, goal = generate_start_goal(maze)
+        title_var.set(f"{maze_key} | Start: {start} | Goal: {goal}")
+        start_algorithms(maze_key, maze, start, goal)
+
+    next_maze()
     root.mainloop()
+
 def simulate(mazes: dict):
     results = []
     algorithms = ['bfs', 'dfs', 'ucs', 'a_star']
