@@ -23,7 +23,7 @@ def start_generation(canvas, method):
     global matrix_kruskal, matrix_prim
 
     rng = random.Random(42)
-    maze = MazeGenerator(60, 80, rng)
+    maze = MazeGenerator(20, 30, rng)
 
     def step(i1, j1, i2, j2):
         draw_wall(canvas, i1, j1, i2, j2, delay=1)
@@ -45,10 +45,13 @@ def start_generation(canvas, method):
 def GenerateMaze():
     root = tk.Tk()
     root.title("Laberintos - Kruskal y Prim")
+    rows, cols = 20, 30  
+    width = cols * CELL_SIZE
+    height = rows * CELL_SIZE
 
-    canvas1 = tk.Canvas(root, width=800, height=600, bg='black')
+    canvas1 = tk.Canvas(root, width=width, height=height, bg='black')
     canvas1.grid(row=1, column=0)
-    canvas2 = tk.Canvas(root, width=800, height=600, bg='black')
+    canvas2 = tk.Canvas(root, width=width, height=height, bg='black')
     canvas2.grid(row=1, column=1)
 
     tk.Label(root, text="Kruskal", bg='black', fg='white').grid(row=0, column=0)
@@ -103,7 +106,7 @@ def main():
 
         if choice == "1":
             GenerateMaze()
-            print("\nPrimeras 10 filas de matrix_kruskal:")
+            print("\nPrimeras 10 filas de matriz:")
             for row in matrix_kruskal[:10]:
                 print(''.join(str(cell) for cell in row))
 
